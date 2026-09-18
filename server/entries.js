@@ -6,6 +6,159 @@ const MODULE_PATTERN = /^[a-z][a-z0-9-]{0,29}$/;
 const KEY_PATTERN = /^[a-z][a-z0-9_-]*(\.[a-z0-9_-]+)+$/;
 const MAX_KEY_LENGTH = 120;
 
+// 占位符形如 {amount}：花括号包住字母起头的名字，平台原样保存，只检查各语言是否对得上
+const PLACEHOLDER_PATTERN = /\{([A-Za-z][A-Za-z0-9_]*)\}/g;
+
+// 成对的括号与中文引号：左字符对应右字符，配对检查用栈维护嵌套层次
+const PAIR_OPEN_TO_CLOSE = {
+  '(': ')',
+  '[': ']',
+  '{': '}',
+  '（': '）',
+  '【': '】',
+  '《': '》',
+  '〈': '〉',
+  '「': '」',
+  '『': '』',
+  '“': '”',
+  '‘': '’',
+};
+const PAIR_CLOSE_TO_OPEN = {};
+Object.keys(PAIR_OPEN_TO_CLOSE).forEach((ch) => {
+  PAIR_CLOSE_TO_OPEN[PAIR_OPEN_TO_CLOSE[ch]] = ch;
+});
+
+// 单词中间的撇号不算引号：don't、it's 是缩略，users' 是复数所有格
+function isApostrophe(chars, index) {
+  const before = chars[index - 1] || '';
+  const after = chars[index + 1] || '';
+  if (/[A-Za-z]/.test(before) && /[A-Za-z]/.test(after)) return true;
+  if (/[sS]/.test(before) && !/[A-Za-z]/.test(after)) return true;
+  return false;
+}
+
+// 弯引号 ’ 夹在英文字母中间时是撇号（don’t），其余情况按右引号参与配对
+function isCurlyApostrophe(chars, index) {
+  return /[A-Za-z]/.test(chars[index - 1] || '') && /[A-Za-z]/.test(chars[index + 1] || '');
+}
+
+// 括号与引号的配对检查：遇到不配对就指出是第几个字符、期望看到什么。
+// 英文直引号没有方向，成对出现即可；中文引号分方向，跟括号一起走栈
+function checkPairs(code, value) {
+  const chars = Array.from(value);
+  const stack = [];
+  let doubleQuoteAt = -1;
+  let singleQuoteAt = -1;
+
+  chars.forEach((ch, index) => {
+    const pos = index + 1;
+    if (ch === '’' && isCurlyApostrophe(chars, index)) return;
+    if (PAIR_OPEN_TO_CLOSE[ch]) {
+      stack.push({ ch, pos });
+      return;
+    }
+    if (PAIR_CLOSE_TO_OPEN[ch]) {
+      const top = stack[stack.length - 1];
+      if (!top) {
+        throw new ApiError(400, 'TRANSLATION_PAIR_MISMATCH',
+          `${code} 的译文里第 ${pos} 个字符「${ch}」是多余的，前面没有与它配对的「${PAIR_CLOSE_TO_OPEN[ch]}」`,
+          `translations.${code}`);
+      }
+      if (PAIR_OPEN_TO_CLOSE[top.ch] !== ch) {
+        throw new ApiError(400, 'TRANSLATION_PAIR_MISMATCH',
+          `${code} 的译文里第 ${pos} 个字符「${ch}」与第 ${top.pos} 个字符「${top.ch}」对不上，这里应当先出现「${PAIR_OPEN_TO_CLOSE[top.ch]}」`,
+          `translations.${code}`);
+      }
+      stack.pop();
+      return;
+    }
+    if (ch === '"') {
+      doubleQuoteAt = doubleQuoteAt === -1 ? pos : -1;
+      return;
+    }
+    if (ch === "'" && !isApostrophe(chars, index)) {
+      singleQuoteAt = singleQuoteAt === -1 ? pos : -1;
+    }
+  });
+
+  if (stack.length) {
+    const top = stack[stack.length - 1];
+    throw new ApiError(400, 'TRANSLATION_PAIR_MISMATCH',
+      `${code} 的译文里第 ${top.pos} 个字符「${top.ch}」没有等到与它配对的「${PAIR_OPEN_TO_CLOSE[top.ch]}」`,
+      `translations.${code}`);
+  }
+  if (doubleQuoteAt !== -1) {
+    throw new ApiError(400, 'TRANSLATION_PAIR_MISMATCH',
+      `${code} 的译文里第 ${doubleQuoteAt} 个字符「"」是落单的引号，直引号要成对出现`,
+      `translations.${code}`);
+  }
+  if (singleQuoteAt !== -1) {
+    throw new ApiError(400, 'TRANSLATION_PAIR_MISMATCH',
+      `${code} 的译文里第 ${singleQuoteAt} 个字符「'」是落单的引号，直引号要成对出现`,
+      `translations.${code}`);
+  }
+}
+
+// 首尾空白检查：空串表示还没翻译是允许的，但只填空白字符不行
+function checkWhitespace(code, value) {
+  if (value === value.trim()) return;
+  if (!value.trim()) {
+    throw new ApiError(400, 'TRANSLATION_WHITESPACE',
+      `${code} 的译文只填了空白字符，要么清空表示还没翻译，要么填写正文`,
+      `translations.${code}`);
+  }
+  const lead = (value.match(/^\s+/) || [''])[0].length;
+  const trail = (value.match(/\s+$/) || [''])[0].length;
+  const parts = [];
+  if (lead) parts.push(`开头 ${lead} 个`);
+  if (trail) parts.push(`结尾 ${trail} 个`);
+  throw new ApiError(400, 'TRANSLATION_WHITESPACE',
+    `${code} 的译文首尾有多余空白：${parts.join('、')}空白字符，请去掉后再保存`,
+    `translations.${code}`);
+}
+
+// 取出一条译文里的全部占位符，返回 名字 -> 出现次数；同名出现多次要累计，跨语言比较时数量也要一致
+function collectPlaceholders(value) {
+  const counts = new Map();
+  Array.from(value.matchAll(PLACEHOLDER_PATTERN)).forEach((match) => {
+    const name = match[1];
+    counts.set(name, (counts.get(name) || 0) + 1);
+  });
+  return counts;
+}
+
+// 同一条文案下，各语言译文用到的占位符要对得上：名字集合一致，每个名字出现的次数也一致。
+// 以默认语言（默认语言没填时取第一种有译文的语言）为基准逐个比较；留空的译文表示还没翻译，不参与比较
+function checkPlaceholdersAcrossLanguages(translations, languages) {
+  const filled = languages
+    .map((item) => item.code)
+    .filter((code) => typeof translations[code] === 'string' && translations[code] !== '');
+  if (filled.length < 2) return;
+
+  const fallback = languages.find((item) => item.isDefault);
+  const refCode = fallback && translations[fallback.code] ? fallback.code : filled[0];
+  const expected = collectPlaceholders(translations[refCode]);
+
+  filled.forEach((code) => {
+    if (code === refCode) return;
+    const actual = collectPlaceholders(translations[code]);
+    const problems = [];
+    expected.forEach((count, name) => {
+      const got = actual.get(name) || 0;
+      if (got === 0) problems.push(`缺少 {${name}}（期望 ${count} 次）`);
+      else if (got !== count) problems.push(`{${name}} 期望 ${count} 次、实际 ${got} 次`);
+    });
+    actual.forEach((count, name) => {
+      if (!expected.has(name)) problems.push(`多出 {${name}}（实际 ${count} 次）`);
+    });
+    if (problems.length) {
+      throw new ApiError(400, 'TRANSLATION_PLACEHOLDER_MISMATCH',
+        `${code} 的占位符与 ${refCode} 对不上：${problems.join('，')}`,
+        `translations.${code}`);
+    }
+  });
+}
+
 function validateModule(value) {
   const module = pickText(value);
   if (!module) throw new ApiError(400, 'MODULE_REQUIRED', '请填写模块名', 'module');
@@ -27,7 +180,8 @@ function validateKey(value) {
   return key;
 }
 
-// 译文逐条校验：语言必须是登记过的，取值必须是文本，长度不能超过上限
+// 译文逐条校验：语言必须是登记过的，取值必须是文本，长度、首尾空白、括号引号配对逐条过关；
+// 全部译文各自过关之后，再检查同一条文案下各语言的占位符是否对得上
 function validateTranslations(raw, languages) {
   if (raw === undefined || raw === null) return {};
   if (typeof raw !== 'object' || Array.isArray(raw)) {
@@ -49,9 +203,12 @@ function validateTranslations(raw, languages) {
     if (value.length > MAX_TRANSLATION_LENGTH) {
       throw new ApiError(400, 'TRANSLATION_TOO_LONG', `${actual} 的译文不能超过 ${MAX_TRANSLATION_LENGTH} 个字符，当前 ${value.length} 个字符`, `translations.${actual}`);
     }
+    checkWhitespace(actual, value);
+    checkPairs(actual, value);
     // 留空表示这条还没翻译，原样保留一个空串，方便页面上看出是空的还是根本没这一项
     result[actual] = value;
   });
+  checkPlaceholdersAcrossLanguages(result, languages);
   return result;
 }
 

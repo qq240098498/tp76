@@ -1,6 +1,13 @@
 const crypto = require('crypto');
 const { load, save, MAX_TRANSLATION_LENGTH, MAX_NOTE_LENGTH, MAX_OPERATOR_LENGTH, UNNAMED } = require('./store');
 const { ApiError, pickText } = require('./errors');
+const {
+  findEdgeWhitespace,
+  findPairProblem,
+  describePairProblem,
+  extractPlaceholders,
+  diffPlaceholders,
+} = require('./format');
 
 const MODULE_PATTERN = /^[a-z][a-z0-9-]{0,29}$/;
 const KEY_PATTERN = /^[a-z][a-z0-9_-]*(\.[a-z0-9_-]+)+$/;
@@ -27,7 +34,8 @@ function validateKey(value) {
   return key;
 }
 
-// 译文逐条校验：语言必须是登记过的，取值必须是文本，长度不能超过上限
+// 译文逐条校验：语言必须是登记过的，取值必须是文本，长度不能超过上限；
+// 非空译文还要过格式关——首尾不能有多余空白，括号与引号要两两配对
 function validateTranslations(raw, languages) {
   if (raw === undefined || raw === null) return {};
   if (typeof raw !== 'object' || Array.isArray(raw)) {
@@ -49,10 +57,49 @@ function validateTranslations(raw, languages) {
     if (value.length > MAX_TRANSLATION_LENGTH) {
       throw new ApiError(400, 'TRANSLATION_TOO_LONG', `${actual} 的译文不能超过 ${MAX_TRANSLATION_LENGTH} 个字符，当前 ${value.length} 个字符`, `translations.${actual}`);
     }
-    // 留空表示这条还没翻译，原样保留一个空串，方便页面上看出是空的还是根本没这一项
+    // 留空表示这条还没翻译，原样保留一个空串，方便页面上看出是空的还是根本没这一项；
+    // 空串不参与下面的格式检查
+    if (value !== '') {
+      const edge = findEdgeWhitespace(value);
+      if (edge) {
+        const parts = [];
+        if (edge.leading) parts.push(`开头有 ${edge.leading} 个空白字符`);
+        if (edge.trailing) parts.push(`结尾有 ${edge.trailing} 个空白字符`);
+        throw new ApiError(400, 'TRANSLATION_EDGE_WHITESPACE', `${actual} 的译文首尾不能有多余空白（${parts.join('，')}），请去掉后再保存`, `translations.${actual}`);
+      }
+      const pair = findPairProblem(value);
+      if (pair) {
+        throw new ApiError(400, 'TRANSLATION_UNPAIRED', `${actual} 的译文${describePairProblem(pair)}，请改正后再保存`, `translations.${actual}`);
+      }
+    }
     result[actual] = value;
   });
+
+  assertPlaceholdersConsistent(result, languages);
   return result;
+}
+
+// 跨语言比对占位符：以默认语言为基准（默认语言没填时取第一种已填的语言），
+// 其余已填语言的占位符名称与出现次数都要与基准一致
+function assertPlaceholdersConsistent(translations, languages) {
+  const filled = languages
+    .map((item) => item.code)
+    .filter((code) => typeof translations[code] === 'string' && translations[code] !== '');
+  if (filled.length < 2) return;
+
+  const defaultLanguage = languages.find((item) => item.isDefault);
+  const refCode = defaultLanguage && filled.includes(defaultLanguage.code)
+    ? defaultLanguage.code
+    : filled[0];
+  const reference = extractPlaceholders(translations[refCode]);
+
+  filled.forEach((code) => {
+    if (code === refCode) return;
+    const problems = diffPlaceholders(reference, extractPlaceholders(translations[code]));
+    if (problems.length) {
+      throw new ApiError(400, 'TRANSLATION_PLACEHOLDER_MISMATCH', `${code} 的译文占位符与 ${refCode} 对不上：${problems.join('；')}`, `translations.${code}`);
+    }
+  });
 }
 
 function validateNote(value) {

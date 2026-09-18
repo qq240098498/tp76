@@ -1,0 +1,15 @@
+{
+  "name": "tp76-i18n-workbench",
+  "version": "1.0.0",
+  "private": true,
+  "description": "多语言文案管理平台（种子版本）",
+  "scripts": {
+    "start": "node server/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

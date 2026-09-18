@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>多语言文案管理平台</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>多语言文案管理平台</h1>
+      <p class="subtitle">登记要支持的语言，按模块维护文案，逐条填上各个语言的译文</p>
+    </div>
+    <div class="topbar-right">
+      <label class="operator" data-field="operator">当前操作者
+        <input id="operator" placeholder="填上你的名字" maxlength="40">
+      </label>
+      <div class="health" id="health">连接中…</div>
+    </div>
+  </header>
+
+  <div class="notice hidden" id="notice"></div>
+
+  <main>
+    <section class="panel">
+      <div class="panel-head">
+        <h2>语言</h2>
+        <div class="panel-tip">默认语言有且只有一种，停用的语言仍然保留已填译文，在编辑表单里会标出来</div>
+      </div>
+      <div class="table-wrap">
+        <table class="grid">
+          <thead>
+            <tr>
+              <th>语言代码</th>
+              <th>名称</th>
+              <th>默认语言</th>
+              <th>启用状态</th>
+              <th>已填译文</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="language-body"></tbody>
+        </table>
+      </div>
+      <p class="empty-tip hidden" id="language-empty">还没有登记任何语言</p>
+
+      <form class="inline-form" id="language-form" autocomplete="off">
+        <h3>新增语言</h3>
+        <label data-field="code">语言代码<input id="language-code" placeholder="例如 ko-KR" maxlength="20"></label>
+        <label data-field="name">语言名称<input id="language-name" placeholder="例如 韩语" maxlength="40"></label>
+        <label class="check" data-field="enabled"><input type="checkbox" id="language-enabled" checked> 启用</label>
+        <label class="check" data-field="isDefault"><input type="checkbox" id="language-default"> 设为默认语言</label>
+        <button type="submit">新增语言</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>文案</h2>
+        <div class="filters">
+          <select id="filter-module"><option value="">全部模块</option></select>
+          <input id="filter-keyword" placeholder="搜索文案键或译文" maxlength="60">
+          <button type="button" id="filter-apply">筛选</button>
+          <button type="button" id="filter-reset" class="ghost">重置</button>
+          <button type="button" id="entry-refresh" class="ghost">刷新</button>
+          <button type="button" id="entry-new">新建文案</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="grid">
+          <thead>
+            <tr id="entry-head-row"></tr>
+          </thead>
+          <tbody id="entry-body"></tbody>
+        </table>
+      </div>
+      <p class="empty-tip hidden" id="entry-empty">当前筛选条件下没有文案</p>
+
+      <form class="entry-form hidden" id="entry-form" autocomplete="off">
+        <h3 id="entry-form-title">新建文案</h3>
+        <div class="form-row">
+          <label data-field="module">模块<input id="entry-module" placeholder="例如 home" maxlength="30"></label>
+          <label data-field="key">文案键<input id="entry-key" placeholder="例如 home.banner.title" maxlength="120"></label>
+        </div>
+        <div class="form-row translations" id="entry-translations"></div>
+        <label class="full" data-field="note">备注<input id="entry-note" placeholder="这条文案出现的页面位置" maxlength="200"></label>
+        <div class="form-actions">
+          <button type="submit">保存</button>
+          <button type="button" id="entry-cancel" class="ghost">取消</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

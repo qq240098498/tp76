@@ -1,0 +1,241 @@
+{
+  "languages": [
+    {
+      "code": "zh-CN",
+      "name": "简体中文",
+      "enabled": true,
+      "isDefault": true,
+      "createdAt": "2026-09-05T01:00:00.000Z"
+    },
+    {
+      "code": "zh-TW",
+      "name": "繁体中文",
+      "enabled": true,
+      "isDefault": false,
+      "createdAt": "2026-09-05T01:05:00.000Z"
+    },
+    {
+      "code": "en-US",
+      "name": "英语（美国）",
+      "enabled": true,
+      "isDefault": false,
+      "createdAt": "2026-09-05T01:10:00.000Z"
+    },
+    {
+      "code": "ja-JP",
+      "name": "日语",
+      "enabled": false,
+      "isDefault": false,
+      "createdAt": "2026-09-05T01:15:00.000Z"
+    }
+  ],
+  "entries": [
+    {
+      "id": "entry-1001",
+      "module": "home",
+      "key": "home.banner.title",
+      "translations": {
+        "zh-CN": "限时折扣，精选好物直降",
+        "zh-TW": "限時折扣，精選好物直降",
+        "en-US": "Limited-time deals on selected items"
+      },
+      "note": "首页顶部轮播主标题",
+      "updatedBy": "陈晓",
+      "createdAt": "2026-09-08T02:10:00.000Z",
+      "updatedAt": "2026-09-16T09:30:00.000Z"
+    },
+    {
+      "id": "entry-1002",
+      "module": "home",
+      "key": "home.banner.subtitle",
+      "translations": {
+        "zh-CN": "单笔满{amount}元包邮",
+        "en-US": "Free shipping on orders over {amount}"
+      },
+      "note": "首页顶部轮播副标题",
+      "updatedBy": "李文",
+      "createdAt": "2026-09-08T02:12:00.000Z",
+      "updatedAt": "2026-09-16T09:32:00.000Z"
+    },
+    {
+      "id": "entry-1003",
+      "module": "home",
+      "key": "home.search.placeholder",
+      "translations": {
+        "zh-CN": "搜索商品或品牌",
+        "zh-TW": "搜尋商品或品牌",
+        "en-US": "Search products or brands",
+        "ja-JP": "商品やブランドを検索"
+      },
+      "note": "首页搜索框占位提示",
+      "updatedBy": "王凯",
+      "createdAt": "2026-09-08T02:20:00.000Z",
+      "updatedAt": "2026-09-15T11:05:00.000Z"
+    },
+    {
+      "id": "entry-1004",
+      "module": "home",
+      "key": "home.empty.tip",
+      "translations": {
+        "zh-CN": "换个关键词再试试",
+        "en-US": "Try another keyword"
+      },
+      "note": "搜索无结果时的提示",
+      "updatedBy": "陈晓",
+      "createdAt": "2026-09-09T03:40:00.000Z",
+      "updatedAt": "2026-09-15T11:20:00.000Z"
+    },
+    {
+      "id": "entry-1005",
+      "module": "order",
+      "key": "order.confirm.title",
+      "translations": {
+        "zh-CN": "确认订单",
+        "zh-TW": "確認訂單",
+        "en-US": "Confirm order"
+      },
+      "note": "下单确认页标题",
+      "updatedBy": "李文",
+      "createdAt": "2026-09-09T04:00:00.000Z",
+      "updatedAt": "2026-09-14T06:15:00.000Z"
+    },
+    {
+      "id": "entry-1006",
+      "module": "order",
+      "key": "order.confirm.itemCount",
+      "translations": {
+        "zh-CN": "共{count}件商品",
+        "zh-TW": "共{count}件商品",
+        "en-US": "{count} items in total"
+      },
+      "note": "下单确认页商品件数",
+      "updatedBy": "李文",
+      "createdAt": "2026-09-09T04:05:00.000Z",
+      "updatedAt": "2026-09-14T06:18:00.000Z"
+    },
+    {
+      "id": "entry-1007",
+      "module": "order",
+      "key": "order.detail.payTip",
+      "translations": {
+        "zh-CN": "请在{minutes}分钟内完成支付",
+        "zh-TW": "請在{minutes}分鐘內完成支付",
+        "en-US": "Please complete the payment within 30 minutes"
+      },
+      "note": "订单详情页支付倒计时提示",
+      "updatedBy": "王凯",
+      "createdAt": "2026-09-09T04:20:00.000Z",
+      "updatedAt": "2026-09-16T02:45:00.000Z"
+    },
+    {
+      "id": "entry-1008",
+      "module": "order",
+      "key": "order.status.pending",
+      "translations": {
+        "zh-CN": "待付款",
+        "zh-TW": "待付款",
+        "en-US": "Pending payment"
+      },
+      "note": "订单状态标签",
+      "updatedBy": "陈晓",
+      "createdAt": "2026-09-10T01:30:00.000Z",
+      "updatedAt": "2026-09-16T02:50:00.000Z"
+    },
+    {
+      "id": "entry-1009",
+      "module": "account",
+      "key": "account.login.title",
+      "translations": {
+        "zh-CN": "登录账号",
+        "zh-TW": "登入帳號",
+        "en-US": "Sign in"
+      },
+      "note": "登录页标题",
+      "updatedBy": "李文",
+      "createdAt": "2026-09-10T05:00:00.000Z",
+      "updatedAt": "2026-09-13T08:00:00.000Z"
+    },
+    {
+      "id": "entry-1010",
+      "module": "account",
+      "key": "account.login.placeholder",
+      "translations": {
+        "zh-CN": "手机号或邮箱",
+        "en-US": "Phone number or email"
+      },
+      "note": "登录页账号输入框占位提示",
+      "updatedBy": "王凯",
+      "createdAt": "2026-09-10T05:02:00.000Z",
+      "updatedAt": "2026-09-13T08:05:00.000Z"
+    },
+    {
+      "id": "entry-1011",
+      "module": "account",
+      "key": "account.register.agree",
+      "translations": {
+        "zh-CN": "我已阅读并同意{link}",
+        "en-US": ""
+      },
+      "note": "注册页协议勾选文案，{link} 由前端替换成协议链接",
+      "updatedBy": "陈晓",
+      "createdAt": "2026-09-11T05:30:00.000Z",
+      "updatedAt": "2026-09-13T08:20:00.000Z"
+    },
+    {
+      "id": "entry-1012",
+      "module": "common",
+      "key": "common.action.confirm",
+      "translations": {
+        "zh-CN": "确定",
+        "zh-TW": "確定",
+        "en-US": "OK"
+      },
+      "note": "通用确认按钮",
+      "updatedBy": "王凯",
+      "createdAt": "2026-09-11T06:00:00.000Z",
+      "updatedAt": "2026-09-12T03:10:00.000Z"
+    },
+    {
+      "id": "entry-1013",
+      "module": "common",
+      "key": "common.action.cancel",
+      "translations": {
+        "zh-CN": "取消",
+        "zh-TW": "取消",
+        "en-US": "Cancel"
+      },
+      "note": "通用取消按钮",
+      "updatedBy": "王凯",
+      "createdAt": "2026-09-11T06:02:00.000Z",
+      "updatedAt": "2026-09-12T03:12:00.000Z"
+    },
+    {
+      "id": "entry-1014",
+      "module": "common",
+      "key": "common.error.network",
+      "translations": {
+        "zh-CN": "网络开小差了，请稍后重试",
+        "zh-TW": "網絡開小差了，請稍後重試",
+        "en-US": "Network error, please try again later"
+      },
+      "note": "通用网络异常提示",
+      "updatedBy": "李文",
+      "createdAt": "2026-09-11T06:10:00.000Z",
+      "updatedAt": "2026-09-12T03:20:00.000Z"
+    },
+    {
+      "id": "entry-1015",
+      "module": "common",
+      "key": "common.loading.text",
+      "translations": {
+        "zh-CN": "正在加载",
+        "zh-TW": "正在載入",
+        "en-US": "Loading"
+      },
+      "note": "通用加载中提示",
+      "updatedBy": "陈晓",
+      "createdAt": "2026-09-11T06:15:00.000Z",
+      "updatedAt": "2026-09-12T03:25:00.000Z"
+    }
+  ]
+}
